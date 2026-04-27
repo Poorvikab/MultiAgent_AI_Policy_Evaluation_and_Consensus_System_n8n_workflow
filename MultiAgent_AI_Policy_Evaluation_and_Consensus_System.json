@@ -1,0 +1,743 @@
+{
+  "name": "MultiAgent_AI_Policy_Evaluation_and_Consensus_System",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "cae2b7d3-13f8-415c-bf81-168e8ae1a89b",
+      "name": "Start Analysis",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "policy",
+              "value": "Enter your input here",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "65bb6d8b-5fa8-499d-b4d3-02368a72071f",
+      "name": "Set Policy Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -672,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Analyze this policy proposal: {{ $json.policy }}\"\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "22499b35-ee94-49d7-b268-54f4348d3add",
+      "name": "Initial Gemini Processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -448,
+        288
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "initialAnalysis",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0fb04592-6e44-4cff-ab4f-6559796d9594",
+      "name": "Extract Initial Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contents\": [{ \"parts\": [{ \"text\": `You are a Government Agent. Evaluate this policy: ${$('Set Policy Input').item.json.policy}\n\nProvide:\n1. Support level (1-10)\n2. Key concerns (feasibility, budget, political risk)\n3. Suggestions for improvement\n\nFormat as JSON: {\"agent\": \"Government\", \"support\": <number>, \"concerns\": [<list>], \"suggestions\": [<list>]}` }] }] } }}",
+        "options": {}
+      },
+      "id": "c5216359-f22e-484d-9eed-b7cbad9674b3",
+      "name": "Government Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contents\": [{ \"parts\": [{ \"text\": `You are a Business Agent. Evaluate this policy: ${$('Set Policy Input').item.json.policy}\n\nProvide:\n1. Support level (1-10)\n2. Key concerns (cost, regulation, market impact)\n3. Suggestions for improvement\n\nFormat as JSON: {\"agent\": \"Business\", \"support\": <number>, \"concerns\": [<list>], \"suggestions\": [<list>]}` }] }] } }}",
+        "options": {}
+      },
+      "id": "15ae2015-92ba-46de-93f7-d48210fa8cf0",
+      "name": "Business Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        192
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contents\": [{ \"parts\": [{ \"text\": `You are a Civil Society Agent. Evaluate this policy: ${$('Set Policy Input').item.json.policy}\n\nProvide:\n1. Support level (1-10)\n2. Key concerns (fairness, ethics, inclusion)\n3. Suggestions for improvement\n\nFormat as JSON: {\"agent\": \"Civil Society\", \"support\": <number>, \"concerns\": [<list>], \"suggestions\": [<list>]}` }] }] } }}",
+        "options": {}
+      },
+      "id": "7828496e-0b68-4f3e-89b8-47fbd213891f",
+      "name": "Civil Society Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        384
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"contents\": [{ \"parts\": [{ \"text\": `You are a Citizen Agent. Evaluate this policy: ${$('Set Policy Input').item.json.policy}\n\nProvide:\n1. Support level (1-10)\n2. Key concerns (lived experience, accessibility)\n3. Suggestions for improvement\n\nFormat as JSON: {\"agent\": \"Citizen\", \"support\": <number>, \"concerns\": [<list>], \"suggestions\": [<list>]}` }] }] } }}",
+        "options": {}
+      },
+      "id": "573636c8-bc35-42c8-a4a7-70c6c4d9e70a",
+      "name": "Citizen Agent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        576
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "governmentResponse",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "921679d5-0706-4130-915d-016e39009aa3",
+      "name": "Extract Government Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "businessResponse",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "02888b0f-928f-4b2b-93a1-d5d1f3730096",
+      "name": "Extract Business Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "civilSocietyResponse",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2f6c8ce0-44f2-4e11-97ee-b538afacb130",
+      "name": "Extract Civil Society Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "citizenResponse",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9151401-67c4-4cfe-92db-84d49922ba6c",
+      "name": "Extract Citizen Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 4,
+        "options": {}
+      },
+      "id": "a412bad8-245c-4131-b899-db4f09afa9e7",
+      "name": "Combine Agent Responses",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": `Analyze these stakeholder responses to the policy: \"${$('Set Policy Input').item.json.policy}\"\n\nGovernment Agent: ${$json.governmentResponse}\n\nBusiness Agent: ${$json.businessResponse}\n\nCivil Society Agent: ${$json.civilSocietyResponse}\n\nCitizen Agent: ${$json.citizenResponse}\n\nProvide:\n1. Key disagreements between agents\n2. Areas of agreement\n3. Conflicting priorities\n4. Overall stakeholder sentiment summary`\n    }]\n  }]\n} }}",
+        "options": {}
+      },
+      "id": "b4670ee7-79f8-4eb0-9c87-b702f186afbe",
+      "name": "Analyze Interactions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        288
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "interactionSummary",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "80691cef-8522-4612-878d-61e8eb0fb6c8",
+      "name": "Extract Interaction Summary",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "YOUR_GEMINI_API_KEY"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": `You are a senior policy analyst. Based on this stakeholder interaction summary, generate a comprehensive final policy evaluation.\n\nPolicy: \"${$('Set Policy Input').item.json.policy}\"\n\nStakeholder Interaction Summary:\n${$json.interactionSummary}\n\nGenerate a final evaluation with:\n1. Overall recommendation (Approve / Reject / Modify)\n2. Feasibility score (1-10)\n3. Equity score (1-10)\n4. Risk score (1-10)\n5. Key implementation considerations\n6. A short executive summary (2-3 sentences)\n\nRespond ONLY with valid JSON in this exact format:\n{\n  \"recommendation\": \"<Approve|Reject|Modify>\",\n  \"feasibility\": <number>,\n  \"equity\": <number>,\n  \"risk\": <number>,\n  \"considerations\": [\"<string>\", \"<string>\"],\n  \"executive_summary\": \"<string>\"\n}`\n    }]\n  }]\n} }}",
+        "options": {}
+      },
+      "id": "cb72ddc8-bdd5-4824-b8cb-7242a69da40f",
+      "name": "Generate Final Evaluation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        288
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "finalEvaluation",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "policy",
+              "value": "={{ $('Set Policy Input').item.json.policy }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "agentSummary",
+              "value": "={{ $('Extract Interaction Summary').item.json.interactionSummary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fcf7711d-c9f9-444f-af55-26e6ed7c3643",
+      "name": "Extract Final Evaluation",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.finalEvaluation;\nconst policy = $input.first().json.policy;\nconst agentSummary = $input.first().json.agentSummary;\n\n// Strip markdown code fences if Gemini wraps JSON in ```json ... ```\nconst cleaned = raw.replace(/```json\\n?/g, '').replace(/```/g, '').trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  parsed = {\n    recommendation: 'PARSE ERROR',\n    feasibility: 0,\n    equity: 0,\n    risk: 0,\n    considerations: ['Could not parse final evaluation JSON'],\n    executive_summary: raw\n  };\n}\n\nconst recColor = {\n  'Approve': '#22c55e',\n  'Reject': '#ef4444',\n  'Modify': '#f59e0b'\n}[parsed.recommendation] || '#6b7280';\n\nconst scoreBar = (label, score) => `\n  <div style=\"margin-bottom:12px\">\n    <div style=\"display:flex;justify-content:space-between;margin-bottom:4px\">\n      <span style=\"font-weight:600;color:#374151\">${label}</span>\n      <span style=\"font-weight:700;color:#1e3a5f\">${score}/10</span>\n    </div>\n    <div style=\"background:#e5e7eb;border-radius:9999px;height:10px\">\n      <div style=\"background:#1e3a5f;width:${score * 10}%;height:10px;border-radius:9999px\"></div>\n    </div>\n  </div>`;\n\nconst html = `<!DOCTYPE html>\n<html>\n<head><meta charset=\"UTF-8\"><title>Policy Evaluation Report</title></head>\n<body style=\"font-family:Arial,sans-serif;padding:48px;max-width:860px;margin:auto;color:#111\">\n\n  <h1 style=\"color:#1e3a5f;border-bottom:3px solid #1e3a5f;padding-bottom:12px\">Policy Evaluation Report</h1>\n  <p style=\"color:#6b7280;margin-top:0\">Generated by Multi-Agent AI Consensus System</p>\n\n  <div style=\"background:#f0f4ff;border-left:5px solid #1e3a5f;padding:16px 20px;border-radius:6px;margin:24px 0\">\n    <strong style=\"color:#1e3a5f\">Policy Proposal:</strong><br>\n    <span style=\"font-size:1.05em\">${policy}</span>\n  </div>\n\n  <div style=\"text-align:center;margin:32px 0\">\n    <div style=\"display:inline-block;background:${recColor};color:#fff;font-size:1.6em;font-weight:800;padding:14px 40px;border-radius:12px;letter-spacing:1px\">\n      ${parsed.recommendation.toUpperCase()}\n    </div>\n  </div>\n\n  <h2 style=\"color:#1e3a5f\">Executive Summary</h2>\n  <p style=\"line-height:1.7;background:#f9fafb;padding:16px;border-radius:8px\">${parsed.executive_summary}</p>\n\n  <h2 style=\"color:#1e3a5f\">Scores</h2>\n  ${scoreBar('Feasibility', parsed.feasibility)}\n  ${scoreBar('Equity', parsed.equity)}\n  ${scoreBar('Risk', parsed.risk)}\n\n  <h2 style=\"color:#1e3a5f\">Key Implementation Considerations</h2>\n  <ul style=\"line-height:2\">\n    ${(parsed.considerations || []).map(c => `<li>${c}</li>`).join('')}\n  </ul>\n\n  <h2 style=\"color:#1e3a5f\">Stakeholder Interaction Summary</h2>\n  <div style=\"background:#f9fafb;padding:16px;border-radius:8px;line-height:1.7;white-space:pre-wrap\">${agentSummary}</div>\n\n  <p style=\"color:#9ca3af;font-size:0.8em;margin-top:40px;border-top:1px solid #e5e7eb;padding-top:12px\">Report generated automatically — review before use in decision-making.</p>\n</body>\n</html>`;\n\nreturn [{ json: { html, parsed } }];"
+      },
+      "id": "2c6a4a02-104d-4ac7-a750-0aa5a300d62a",
+      "name": "Format HTML Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.html;\nconst binary = Buffer.from(html, 'utf8');\n\nreturn [{\n  json: { fileName: 'Policy_Evaluation_Report.html' },\n  binary: {\n    data: {\n      data: binary.toString('base64'),\n      mimeType: 'text/html',\n      fileName: 'Policy_Evaluation_Report.html',\n      fileExtension: 'html'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        288
+      ],
+      "id": "c855c94d-3d5c-48d0-b1b4-eb2f391bc554",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "html": "={{ $('Format HTML Report').item.json.html }}"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1984,
+        288
+      ],
+      "id": "ffb9c6db-f311-4eda-b1e0-20e97a71f756",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "html_content": "={{ $json.html }}",
+        "output_format": "file",
+        "timeout": 5000
+      },
+      "type": "n8n-nodes-htmlcsstopdf.htmlcsstopdf",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        288
+      ],
+      "id": "9508e8a0-5e83-4c23-9e8c-20bd340a78e5",
+      "name": "Convert HTML to PDF",
+      "credentials": {
+        "htmlcsstopdfApi": {
+          "id": "DcoEjslUZ9yTevKQ",
+          "name": "HTML to PDF account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start Analysis": {
+      "main": [
+        [
+          {
+            "node": "Set Policy Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Policy Input": {
+      "main": [
+        [
+          {
+            "node": "Initial Gemini Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initial Gemini Processing": {
+      "main": [
+        [
+          {
+            "node": "Extract Initial Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Initial Response": {
+      "main": [
+        [
+          {
+            "node": "Government Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Business Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Civil Society Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Citizen Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Government Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Government Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Business Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Business Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Civil Society Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Civil Society Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Citizen Agent": {
+      "main": [
+        [
+          {
+            "node": "Extract Citizen Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Government Response": {
+      "main": [
+        [
+          {
+            "node": "Combine Agent Responses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Business Response": {
+      "main": [
+        [
+          {
+            "node": "Combine Agent Responses",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extract Civil Society Response": {
+      "main": [
+        [
+          {
+            "node": "Combine Agent Responses",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Extract Citizen Response": {
+      "main": [
+        [
+          {
+            "node": "Combine Agent Responses",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Combine Agent Responses": {
+      "main": [
+        [
+          {
+            "node": "Analyze Interactions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Interactions": {
+      "main": [
+        [
+          {
+            "node": "Extract Interaction Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Interaction Summary": {
+      "main": [
+        [
+          {
+            "node": "Generate Final Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Final Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Extract Final Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Final Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Format HTML Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format HTML Report": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "dbe1d8f2-5bc6-44f1-9aa7-ee29c809b13c",
+  "meta": {
+    "instanceId": "997ce5218ac425f9e0b889820d3d02cc47bad0ea49ab45b58537999b3e49c6e9"
+  },
+  "id": "4kF1RX2hjZLksyTp",
+  "tags": []
+}
