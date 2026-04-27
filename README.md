@@ -113,4 +113,4 @@ The report renders directly inside n8n and includes:
 
 - The workflow makes **7 Gemini API calls** per run — keep an eye on free tier limits
 - To change the policy just edit the one string value in **Set Policy Input** — nothing else needs to change
-- The workflow uses `gemini-2.5-flash` — swap to `gemini-2.5-pro` in the node URLs for higher quality output
+- The workflow uses `gemini-2.5-flash`
