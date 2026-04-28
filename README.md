@@ -4,7 +4,7 @@ An n8n workflow that simulates a multi-stakeholder policy debate using Google Ge
 ---
 
 ## Demo Video
-https://github.com/user-attachments/assets/7309892a-4f34-4449-979d-c0d7c7aae184
+https://github.com/user-attachments/assets/5cb4dfec-47a9-48e9-bf61-3bbecb329d5c
 
 ---
 ## 🧠 What It Does
